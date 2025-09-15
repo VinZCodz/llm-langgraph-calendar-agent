@@ -18,7 +18,7 @@ const toolNode = new ToolNode(availableTools);
 
 const isToolCall = ({ messages }: typeof MessagesAnnotation.State) => {
     const lastMessages = messages.pop() as AIMessage;
-    if (lastMessages?.tool_calls?.length)
+    if (lastMessages.tool_calls?.length)
         return "tools";
     else
         return "__end__"
