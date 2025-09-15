@@ -1,0 +1,19 @@
+{
+  "name": "my-e2e-bun-container ",
+  "image": "mcr.microsoft.com/devcontainers/universal",
+  "features": {
+
+  },
+  "customizations": {
+    "vscode": {
+      "settings": {
+        // Add any VS Code settings you want
+      },
+      "extensions": [
+        "streetsidesoftware.code-spell-checker",
+        "ritwickdey.liveserver"
+      ]
+    }
+  },
+  "postCreateCommand": "npm install -g bun && cd server && bun install"
+}
