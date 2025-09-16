@@ -1,7 +1,7 @@
 import * as readline from 'node:readline/promises';
 import fs from "fs/promises";
-import { graphVisualize } from "../service/graphVisualizer.ts"
-import { customReActAgent } from "../service/customStateGraphBuilder.ts";
+import { graphVisualize } from "../services/graphVisualizer.ts"
+import { customReActAgent } from "../services/customStateGraphBuilder.ts";
 
 const instructions = await fs.readFile("./systemPrompt.txt", "utf-8");
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
