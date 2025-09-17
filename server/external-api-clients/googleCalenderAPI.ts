@@ -12,9 +12,7 @@ oauth2Client.setCredentials({
 
 const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
 
-const getCalenderEvents = async ({ q, timeMin, timeMax }: types.getCalenderEventsQueryParams) => {
-    console.log(`Input Param: ${q} ${timeMin}, ${timeMax}`);
-
+const getCalenderEvents = async ({ q, timeMin, timeMax }: types.EventParams) => {
     const result = await calendar.events.list({
         calendarId: 'primary',
         q: q,
@@ -28,18 +26,41 @@ const getCalenderEvents = async ({ q, timeMin, timeMax }: types.getCalenderEvent
     return result.data.items;
 }
 
-const createCalenderEvent = async ({summary, start, end, }) => {
-    console.log(`Input Param: ${eventDetails}`);
-
+const createCalenderEvent = async ({ start, end, summary, description, attendees, location, status }: types.EventData) => {
     const response = await calendar.events.insert({
         calendarId: 'primary',
-        requestBody: {},
+        requestBody: {
+            start: start,
+            end: end,
+            summary: summary,
+            description: description,
+            attendees: attendees,
+            location: location,
+            status: status
+        }
     });
     return response.data.htmlLink;
 }
 
+const updateCalenderEvent = async ({ eventId, updatedEventBody }: types.ChangedEventData) => {
+    const response = await calendar.events.update({
+        calendarId: 'primary',
+        eventId: eventId,
+        requestBody: updatedEventBody
+    });
+    return response.data.htmlLink;
+}
+
+const deleteCalenderEvent = async ( eventId : string) => {
+    await calendar.events.delete({
+        calendarId: 'primary',
+        eventId: eventId,
+    });
+}
+
 export {
     getCalenderEvents,
-    createCalenderEvents,
-
+    createCalenderEvent,
+    updateCalenderEvent,
+    deleteCalenderEvent,
 }
