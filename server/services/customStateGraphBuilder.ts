@@ -1,7 +1,7 @@
 
 import { ChatGroq } from "@langchain/groq";
 import { ToolNode } from "@langchain/langgraph/prebuilt";
-import { StateGraph, MessagesAnnotation, MemorySaver } from "@langchain/langgraph";
+import { StateGraph, MessagesAnnotation, interrupt, MemorySaver, Command, END } from "@langchain/langgraph";
 import { AIMessage } from "@langchain/core/messages";
 import { availableTools } from "./tools.ts";
 
@@ -16,18 +16,35 @@ const callModel = async (state: typeof MessagesAnnotation.State) => {
 
 const toolNode = new ToolNode(availableTools);
 
-const isToolCall = ({ messages }: typeof MessagesAnnotation.State) => {
-    const lastMessages = messages.pop() as AIMessage;
+const isToolCall = (state: typeof MessagesAnnotation.State) => {
+    const lastMessages = state.messages[state.messages.length - 1] as AIMessage;
     if (lastMessages.tool_calls?.length)
-        return "tools";
+        return "human";
     else
         return "__end__"
+}
+
+const humanConfirmation = (state: typeof MessagesAnnotation.State) => {
+    //console.log(lastMessages.tool_calls);
+    const isApproved = interrupt({
+        question: "Can AI use the Tool?",
+        // Surface the output that should be
+        // reviewed and approved by the human.
+    });
+
+    if (isApproved) {
+        return new Command({ goto: "tools" });
+    } else {
+        //Prompt AI that it was cancelled.
+        return new Command({ goto: "agent" });
+    }
 }
 
 const customStateGraphBuilder = new StateGraph(MessagesAnnotation)
     .addNode("agent", callModel)
     .addEdge("__start__", "agent")
     .addNode("tools", toolNode)
+    .addNode("human", humanConfirmation)
     .addConditionalEdges("agent", isToolCall)
     .addEdge("tools", "agent")
 

@@ -2,6 +2,7 @@ import * as readline from 'node:readline/promises';
 import fs from "fs/promises";
 import { graphVisualize } from "../services/graphVisualizer.ts"
 import { customReActAgent } from "../services/customStateGraphBuilder.ts";
+import { Command } from '@langchain/langgraph';
 
 const instructions = await fs.readFile("./systemPrompt.txt", "utf-8");
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
@@ -15,9 +16,21 @@ const main = async () => {
         }
         messages.push({ role: "user", content: userPrompt });
 
-        const result = await customReActAgent.invoke({ messages: messages }, { configurable: { thread_id: "1" } });
+        const threadConfig = { configurable: { thread_id: "1" } };
+        let result = await customReActAgent.invoke({ messages: messages }, threadConfig);
 
-        console.log(`Assistant: ${result.messages.pop()?.content}`);
+        const state = await customReActAgent.getState(threadConfig);
+        const interrupts = state.tasks[state.tasks.length - 1]?.interrupts;
+
+        if (interrupts) {
+            console.log(`LLM has run into programmed interrupt! for the following reasons:`);
+            console.log(`${interrupts[interrupts.length - 1]?.value.question}`);
+            const confirmation = (await rl.question('Your Answer(Y/YES): ')).toUpperCase();
+            result = await customReActAgent.invoke(new Command({ resume: confirmation === "YES" || confirmation == 'Y' }), threadConfig);
+        }
+
+        console.log(`Assistant: ${result.messages[result.messages.length - 1]?.content}`);
+
     }
 }
 

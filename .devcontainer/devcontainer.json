@@ -11,7 +11,8 @@
       },
       "extensions": [
         "streetsidesoftware.code-spell-checker",
-        "ritwickdey.liveserver"
+        "ritwickdey.liveserver",
+        "oven.bun-vscode"
       ]
     }
   },
