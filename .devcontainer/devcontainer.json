@@ -16,5 +16,5 @@
       ]
     }
   },
-  "postCreateCommand": "npm install -g bun && cd server && bun install"
+  "postCreateCommand": "npm install -g bun && cd server && bun install && touch controllers/.env"
 }

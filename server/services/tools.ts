@@ -87,7 +87,7 @@ const updateCalenderEvent = tool(
 const deleteCalenderEvent = tool(
     async (payload) => {
         try {
-            //await calendar.deleteCalenderEvent(payload as string);
+            await calendar.deleteCalenderEvent(payload as string);
             return `Event Deleted!`;
         } catch (error) {
             console.warn(error);
@@ -96,7 +96,7 @@ const deleteCalenderEvent = tool(
     },
     {
         name: "deleteCalenderEvent",
-        description: "Call to delete a single calender event. Danger: Ask Confirmation!",
+        description: "Call to delete a single calender event.",
         schema: z.object({
             eventId: z.string().describe("Event identifier.")
         }),
@@ -104,10 +104,13 @@ const deleteCalenderEvent = tool(
     }
 );
 
-export const availableTools = [
+export const autonomousTools = [
     searchTool,
     getCalenderEvents,
     createCalenderEvent,
     updateCalenderEvent,
+];
+
+export const sensitiveTools = [
     deleteCalenderEvent,
 ];

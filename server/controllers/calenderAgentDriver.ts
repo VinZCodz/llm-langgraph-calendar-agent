@@ -25,8 +25,10 @@ const main = async () => {
         if (interrupts) {
             console.log(`LLM has run into programmed interrupt! for the following reasons:`);
             console.log(`${interrupts[interrupts.length - 1]?.value.question}`);
-            const confirmation = (await rl.question('Your Answer(Y/YES): ')).toUpperCase();
-            result = await customReActAgent.invoke(new Command({ resume: confirmation === "YES" || confirmation == 'Y' }), threadConfig);
+            const confirmation = (await rl.question('')).toUpperCase();
+            
+            const command=new Command({ resume: confirmation });
+            result = await customReActAgent.invoke(command, threadConfig);
         }
 
         console.log(`Assistant: ${result.messages[result.messages.length - 1]?.content}`);

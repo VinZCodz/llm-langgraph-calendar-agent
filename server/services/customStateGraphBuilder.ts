@@ -2,40 +2,46 @@
 import { ChatGroq } from "@langchain/groq";
 import { ToolNode } from "@langchain/langgraph/prebuilt";
 import { StateGraph, MessagesAnnotation, interrupt, MemorySaver, Command, END } from "@langchain/langgraph";
-import { AIMessage } from "@langchain/core/messages";
-import { availableTools } from "./tools.ts";
+import { AIMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { autonomousTools, sensitiveTools } from "./tools.ts";
 
 const model = new ChatGroq({
     model: process.env.MODEL!,
-}).bindTools(availableTools);
+}).bindTools([...autonomousTools, ...sensitiveTools]);
 
 const callModel = async (state: typeof MessagesAnnotation.State) => {
     const response = await model.invoke(state.messages);
     return { messages: [response] };
 }
 
-const toolNode = new ToolNode(availableTools);
+const toolNode = new ToolNode([...autonomousTools, ...sensitiveTools]);
 
+const hilTools = new Set<string>(sensitiveTools.map(_ => _.name));
 const isToolCall = (state: typeof MessagesAnnotation.State) => {
     const lastMessages = state.messages[state.messages.length - 1] as AIMessage;
-    if (lastMessages.tool_calls?.length)
-        return "human";
+    const toolCalls = lastMessages.tool_calls;
+
+    if (toolCalls?.length) {
+        if (hilTools.has(toolCalls[toolCalls.length - 1]?.name!)) {
+            return "human";
+        }
+        return "tools"
+    }
     else
         return "__end__"
 }
 
 const humanConfirmation = (state: typeof MessagesAnnotation.State) => {
-    //console.log(lastMessages.tool_calls);
-    const isApproved = interrupt({
-        question: "Can AI use the Tool?",
-        // Surface the output that should be
-        // reviewed and approved by the human.
+    const confirmation: string = interrupt({
+        question: "Caution : Operation is sensitive! which may have data loss and/or may not be undo'able if permitted. Do you confirm(Y|YES)?"
     });
 
-    if (isApproved) {
+    if (confirmation === 'YES' || confirmation == 'Y') {
         return new Command({ goto: "tools" });
     } else {
-        //Prompt AI that it was cancelled.
+        (state.messages[state.messages.length - 1] as AIMessage).tool_calls?.pop();
+        state.messages.push(new HumanMessage(`NO DON'T PROCEED! Please cancel this operation!`));
+        
         return new Command({ goto: "agent" });
     }
 }
