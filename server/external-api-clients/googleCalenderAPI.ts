@@ -36,7 +36,15 @@ const createCalenderEvent = async ({ start, end, summary, description, attendees
             description: description,
             attendees: attendees,
             location: location,
-            status: status
+            status: status,
+                    conferenceData: {
+          createRequest: {
+            requestId: getRandomIntInclusive(1, 10);, 
+            conferenceSolutionKey: {
+              type: "hangoutsMeet" // Specifies Google Meet as the conference solution
+            }
+          }
+        }
         }
     });
     return response.data.htmlLink;
@@ -56,6 +64,12 @@ const deleteCalenderEvent = async ( eventId : string) => {
         calendarId: 'primary',
         eventId: eventId,
     });
+}
+
+function getRandomIntInclusive(min: number, max: number): number {
+  min = Math.ceil(min); 
+  max = Math.floor(max); 
+  return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
 export {
